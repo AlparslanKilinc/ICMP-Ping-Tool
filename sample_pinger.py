@@ -51,8 +51,17 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
 
         # TODO
         # Fetch the ICMP header from the IP packet
-        
-        
+        icmpHeader = recPacket[20:28]
+        # ICMP header fields: type (8), code (8), checksum (16), id (16), sequence (16)
+        icmpType, icmpCode, icmpChecksum, icmpID, icmpSeq = struct.unpack("bbHHh", icmpHeader)
+        if icmpType == 0 and icmpCode == 0 and icmpID == ID:
+            rtt = (timeReceived - startedSelect) * 1000
+            rtt_min = min(rtt_min, rtt)
+            rtt_max = max(rtt_max, rtt)
+            rtt_sum += rtt
+            rtt_cnt += 1
+            msg='{} bytes from {}; time={}ms'.format(len(recPacket),destAddr,rtt)
+            return msg
         # TODO END
 
         timeLeft = timeLeft - howLongInSelect
@@ -92,8 +101,8 @@ def doOnePing(destAddr, timeout):
 
     # TODO
     # Create Socket here
-    
-    
+    mySocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
+    mySocket.settimeout(timeout)
     # TODO END
 
     myID = os.getpid() & 0xFFFF  # Return the current process i
@@ -120,7 +129,9 @@ def ping(host, timeout=1):
     except KeyboardInterrupt:
         # TODO
         # calculate statistic here
-        
+        avg_rtt = rtt_sum / rtt_cnt
+        print("---" + dest + "ping statistics ---")
+        print("round-trip time min/avg/max {:.2f}/{:.2f}/{:.2f} ms".format(rtt_min, avg_rtt, rtt_max))
         # TODO END
 
 if __name__ == '__main__':
