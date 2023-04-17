@@ -51,16 +51,18 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
 
         # TODO
         # Fetch the ICMP header from the IP packet
+        # 20 bytes -> 28 bytes  160-bit to 224-bit
         icmpHeader = recPacket[20:28]
-        # ICMP header fields: type (8), code (8), checksum (16), id (16), sequence (16)
+        #type:8, code:8, checksum:16, id:16, sequence:16
         icmpType, icmpCode, icmpChecksum, icmpID, icmpSeq = struct.unpack("bbHHh", icmpHeader)
+        #Type and code must be set to 0.
         if icmpType == 0 and icmpCode == 0 and icmpID == ID:
             rtt = (timeReceived - startedSelect) * 1000
-            rtt_min = min(rtt_min, rtt)
             rtt_max = max(rtt_max, rtt)
-            rtt_sum += rtt
+            rtt_min = min(rtt_min, rtt)
             rtt_cnt += 1
-            msg='{} bytes from {}; time={}ms'.format(len(recPacket),destAddr,rtt)
+            rtt_sum += rtt
+            msg=f'{len(recPacket)} bytes from {destAddr}; time={rtt:.2f}ms'
             return msg
         # TODO END
 
